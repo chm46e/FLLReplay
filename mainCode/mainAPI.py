@@ -5,7 +5,7 @@ class Motor:
         self.motor = eval("hub_runtime.hub.port." + port + ".motor")
 
     def start(self, voltage):
-        self.motor.pwm(voltage)
+        self.motor.run_at_speed(voltage)
     
     def stop(self):
         self.motor.brake()
@@ -21,37 +21,38 @@ class Motor:
         self.motor.run_for_degrees(degrees, speed)
 
 
-class MotorPair: #Multiproccessing
+class MotorPair: 
     def __init__(self, portL, portR):
         self.rMotor = eval("hub_runtime.hub.port." + portR + ".motor")
         self.lMotor = eval("hub_runtime.hub.port." + portL + ".motor")
 
 
     def startTank(self, lSpeed, rSpeed): 
-        self.rMotor.pwm(rSpeed)
-        self.lMotor.pwm(lSpeed)
+        self.rMotor.run_at_speed(rSpeed)
+        self.lMotor.run_at_speed(-(lSpeed))
 
     def stop(self):
         self.rMotor.brake()
         self.lMotor.brake()
 
     def start(self, steering, speed):
-        if(steering > 0):
-            r = round(speed - speed * (steering * 0.01))
-            self.lMotor.pwm(-(speed))
-            self.rMotor.pwm(-(r))
+        steering = round(steering)
+        if(steering == 0):
+            self.rMotor.run_at_speed(speed)
+            self.lMotor.run_at_speed(-(speed))
+
+        elif(steering > 0):
+            v = round(speed - (steering * 2 / 100)* speed)
+            self.lMotor.run_at_speed(-(speed))
+            self.rMotor.run_at_speed(v)
 
         elif(steering < 0):
-            l = round(speed + speed * (steering * 0.01))
-            self.rMotor.pwm(speed)
-            self.lMotor.pwm(l)
-
-        elif(steering == 0):
-            self.rMotor.pwm(speed)
-            self.lMotor.pwm(-(speed))
+            v = round(speed + (steering *2 / 100)* speed)
+            self.rMotor.run_at_speed(speed)
+            self.lMotor.run_at_speed(-(v))
 
         else:
-            print("Error in MotorPair.")
+            raise ValueError("MotorPair.start.steering != int")
 
 class ColorSensor:
     def __init__(self, port):
@@ -90,10 +91,20 @@ class Hub:
         return self.hub.status()
     
     def temperature(self):
-        self.hub.temperature()
+        return self.hub.temperature()
     
     def buttonCheck(self, btn):
-        return eval("self.hub.button." + btn + ".is_pressed()")
+        return eval("hub_runtime.hub.button." + btn + ".is_pressed()")
         
     def getGyroAngle(self):
         return self.hub.motion.yaw_pitch_roll()[0]
+    
+    def getAllGyro(self):
+        return self.hub.motion.yaw_pitch_roll()
+
+    def resetGyro(self):
+        self.hub.motion.yaw_pitch_roll(0)
+        utime.sleep_ms(2)
+
+    def display(self, smth):
+        self.hub.display.show(smth)
