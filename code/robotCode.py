@@ -111,6 +111,16 @@ class Hub:
     def display(self, smth):
         self.hub.display.show(smth)
 
+class Timer:
+    def __init__(self):
+        self.hub = eval("hub_runtime")
+
+    def start(self):
+        self.hub.runtime.timer.reset()
+    
+    def get(self):
+        return self.hub.runtime.timer.get()
+
 #Skeleton section:
 mHub = Hub()
 lMm = Motor("A")
@@ -120,6 +130,7 @@ rDm = Motor("F")
 bDm = MotorPair("E", "F")
 lCs = ColorSensor("C")
 rCs = ColorSensor("D")
+timer = Timer()
 
 correction = 0
 
@@ -436,22 +447,40 @@ def tenth():
 loop = True
 screen = 0
 while loop:
+    h = 1
+    isLaunchTime = False
     if(mHub.buttonCheck("left") == True):
-        screen = abs(screen - 1)
-        mHub.display(str(screen))
-        utime.sleep_ms(250)
-    elif(mHub.buttonCheck("right") == True):
-        if(screen < 9):
-            screen+=1
-            mHub.display(str(screen))
-            utime.sleep_ms(250)
-        elif(screen >= 9):
-            screen = 0
+        timer.start()
+        while h == 1:
+            if(mHub.buttonCheck("left") == False):
+                timerNow = timer.get()
+                h = 0
+        if(timerNow < 0.5):
+            screen = abs(screen - 1)
             mHub.display(str(screen))
             utime.sleep_ms(250)
         else:
-            raise Exception("loop.screen != int")
-    elif(mHub.buttonCheck("center") == True):
+            isLaunchTime = True
+    elif(mHub.buttonCheck("right") == True):
+        timer.start()
+        while h == 1:
+            if(mHub.buttonCheck("right") == False):
+                timerNow = timer.get()
+                h = 0
+        if(timerNow < 0.5):
+            if(screen < 9):
+                screen+=1
+                mHub.display(str(screen))
+                utime.sleep_ms(250)
+            elif(screen >= 9):
+                screen = 0
+                mHub.display(str(screen))
+                utime.sleep_ms(250)
+            else:
+                raise Exception("loop.screen != int")
+        else:
+            isLaunchTime = True
+    if(isLaunchTime == True):
         if(screen == 0):
             first()
             mHub.display(str(screen))

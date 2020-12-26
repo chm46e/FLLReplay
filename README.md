@@ -36,7 +36,7 @@ Find the Hub's bluetooth address by connecting to it via cable and running the c
 hub_runtime.hub.bluetooth.info()
 ```
 Creates a binding between the RFCOMM device and a remote Bluetooth device:\
-Note: If you shut down your computer the device get's deleted and you'll have to rerun the command at startup.
+Note: If you shut down your computer the binding get's deleted and you'll have to rerun the command at startup.
 ```
 sudo rfcomm bind /dev/rfcomm0 hub_mac_address 1
 ```
