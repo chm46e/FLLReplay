@@ -1,14 +1,5 @@
 import utime
 
-#rDm Positive == positive direction
-#lDm Positive == negative direction
-
-
-#tasks:
-
-#program starter
-
-
 class Motor:
     def __init__(self, port):
         self.motor = eval("hub_runtime.hub.port." + port + ".motor")
