@@ -46,3 +46,12 @@ Run to connect:
 screen /dev/rfcomm0
 ```
 Type CTRL+C to stop the log
+
+##### Setup for running programs on the Hub:
+After connecting to the Hub, copy the program that you want to execute\
+Then go into the terminal and type in order from left to right:\
+CTRL+E CTRL+SHIFT+V CTRL+D\
+And the program should execute.
+
+#### For setup for installing programs to the hub:
+Use: https://github.com/nutki/spike-tools
