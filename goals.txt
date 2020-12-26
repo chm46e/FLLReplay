@@ -1,4 +1,6 @@
-1) Add a Proper program starter.
-2) Add comments
-3) Add the main code
-4) Add more detection 
+1) Add a perfect program starter.
+1.1) Uses time calculations.
+2) Make a directory where we store commented programs.
+2.1) All of the other programs we just don't comment in.
+2.2) We don't have to worry about comments right now.
+3) Program our main code.
