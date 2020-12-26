@@ -1,5 +1,7 @@
+#Import section:
 import utime
 
+#API/class section:
 class Motor:
     def __init__(self, port):
         self.motor = eval("hub_runtime.hub.port." + port + ".motor")
@@ -109,6 +111,7 @@ class Hub:
     def display(self, smth):
         self.hub.display.show(smth)
 
+#Skeleton section:
 mHub = Hub()
 lMm = Motor("A")
 rMm = Motor("B")
@@ -138,6 +141,7 @@ def deceleration(dCounter, dDSpeed, stopSpeed, powerIntegral):
         return powerIntegral
     else:
         return powerIntegral
+
 def straight(target, dASpeed, dDSpeed, speed, decStart, stopSpeed, accelBool, decBool):
     lDm.resetEncoder()
     rDm.resetEncoder()
@@ -223,7 +227,7 @@ def turn(targetGDeg, speed):
 
 def lags(tLi, power, tarDeg, port, dASpeed, dDSpeed, decStart, stopSpeed, accelBool, decBool):
     #Designed by: Brickwolves Waring FLL
-    #I added acceleration and deceleration booleans
+    #I added acceleration and deceleration
     lDm.resetEncoder()
     rDm.resetEncoder()
     mHub.resetGyro()
@@ -396,29 +400,23 @@ def lineSquaring(blackInt, whiteInt, startSpeed):
             else:
                 raise Exception("lineSquaring.counter != 1,2,3,4,5")
 
-#Program Sector
+#Program section:
 def first():
-    straight(5000, 50, 50, 50, 80, 10, True, True)
     global screen
     screen = 0
 def second():
-    turn(90, 50)
     global screen
     screen = 1
 def third():
-    lags(75, 50, 4000, "rr", 50, 50, 80, 10, True, True)
     global screen
     screen = 2
 def fourth():
-    mediumMotor(360, 50, "r")
     global screen
     screen = 3
 def fifth():
-    PIDLineFollower(4000, 50)
     global screen
     screen = 4
 def sixth():
-    lineSquaring(25, 100, 20)
     global screen
     screen = 5
 def seventh():
@@ -434,7 +432,7 @@ def tenth():
     global screen
     screen = 9
 
-
+#Loop section:
 loop = True
 screen = 0
 while loop:
