@@ -1,0 +1,4 @@
+1) Add a Proper program starter.
+2) Add comments
+3) Add the main code
+4) Add more detection 
