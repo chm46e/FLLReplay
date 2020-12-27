@@ -1,4 +1,4 @@
-# FLLReplayCode
+# FLLReplay
 Code for the FLL Replay season robot game using the LEGO Education Spike Prime Set (45678).\
 Works with most Linux and MAC OS X systems.\
 MAC OS X doesn't have a connection setup writeup yet, because of testing issues.
