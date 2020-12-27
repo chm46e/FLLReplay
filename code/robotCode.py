@@ -134,24 +134,47 @@ timer = Timer()
 
 correction = 0
 
-def acceleration(counter, speed, dASpeed, powerIntegral):
-    power = speed
-    if(powerIntegral >= power):
-        return powerIntegral
-    elif(powerIntegral < power and counter % dASpeed == 0):
-        powerIntegral+=1
-        return powerIntegral
+def acceleration(counter, speed, dASpeed, powerIntegral, forwardBool):
+    if(forwardBool == True):
+        power = speed
+        if(powerIntegral >= power):
+            return powerIntegral
+        elif(powerIntegral < power and counter % dASpeed == 0):
+            powerIntegral+=1
+            return powerIntegral
+        else:
+            return powerIntegral
+    elif(forwardBool == False):
+        power = speed
+        if(powerIntegral <= power):
+            return powerIntegral
+        elif(powerIntegral > power and counter % dASpeed == 0):
+            powerIntegral-=1
+            return powerIntegral
+        else:
+            return powerIntegral
     else:
-        return powerIntegral
+        raise ValueError("acceleration.forwardBool != bool")
 
-def deceleration(dCounter, dDSpeed, stopSpeed, powerIntegral):
-    if(powerIntegral <= stopSpeed):
-        return stopSpeed
-    elif(powerIntegral > stopSpeed and dCounter % dDSpeed == 0):
-        powerIntegral-=1
-        return powerIntegral
+def deceleration(dCounter, dDSpeed, stopSpeed, powerIntegral, forwardBool):
+    if(forwardBool == True):
+        if(powerIntegral <= stopSpeed):
+            return stopSpeed
+        elif(powerIntegral > stopSpeed and dCounter % dDSpeed == 0):
+            powerIntegral-=1
+            return powerIntegral
+        else:
+            return powerIntegral
+    elif(forwardBool == False):
+        if(powerIntegral >= stopSpeed):
+            return stopSpeed
+        elif(powerIntegral < stopSpeed and dCounter % dDSpeed == 0):
+            powerIntegral+=1
+            return powerIntegral
+        else:
+            return powerIntegral
     else:
-        return powerIntegral
+        raise ValueError("deceleration.forwardBool != bool")
 
 def straight(target, dASpeed, dDSpeed, speed, decStart, stopSpeed, accelBool, decBool):
     lDm.resetEncoder()
@@ -160,6 +183,7 @@ def straight(target, dASpeed, dDSpeed, speed, decStart, stopSpeed, accelBool, de
     tGa = mHub.getGyroAngle()
     power = speed
     isAccelTime = True
+    forward = speed > 0
     powerIntegral = 0
     counter = 0
     dCounter = 0
@@ -170,9 +194,19 @@ def straight(target, dASpeed, dDSpeed, speed, decStart, stopSpeed, accelBool, de
     while a == 1:
         counter+=1
         cGa = mHub.getGyroAngle()
-        steering = (tGa - cGa)*2 + correction
+        if(forward == True):
+            steering = (tGa - cGa)*2 + correction
+        elif(forward == False):
+            steering = (cGa - tGa) * 2 + correction
+        else:
+            raise Exception("straight.forward != bool")
         if(accelBool == True and isAccelTime == True):
-            powerIntegral = acceleration(counter, power, dASpeed, powerIntegral)
+            if(forward == True):
+                powerIntegral = acceleration(counter, power, dASpeed, powerIntegral, True)
+            elif(forward == False):
+                powerIntegral = acceleration(counter, power, dASpeed, powerIntegral, False)
+            else:
+                raise Exception("straight.forward != bool")
         elif(accelBool == False and isAccelTime == True):
             powerIntegral = power
         elif(isAccelTime == False):
@@ -185,7 +219,12 @@ def straight(target, dASpeed, dDSpeed, speed, decStart, stopSpeed, accelBool, de
                 isAccelTime = False
                 m = 0
             dCounter+=1
-            powerIntegral = deceleration(dCounter, dDSpeed, stopSpeed, powerIntegral)
+            if(forward == True):
+                powerIntegral = deceleration(dCounter, dDSpeed, stopSpeed, powerIntegral, True)
+            elif(forward == False):
+                powerIntegral = deceleration(dCounter, dDSpeed, stopSpeed, powerIntegral, False)
+            else:
+                raise Exception("straight.forward != bool")
         elif(decBool == False and isDecTime == True):
             powerIntegral = power
         elif(isDecTime == False):
@@ -196,7 +235,7 @@ def straight(target, dASpeed, dDSpeed, speed, decStart, stopSpeed, accelBool, de
         bDm.start(steering, powerIntegral)
         cRdMv = rDm.getEncoder()
         cLdMv = lDm.getEncoder()
-        average = round((cRdMv + -(cLdMv))/2)
+        average = round(abs((cRdMv + -(cLdMv))/2))
         isDecTime = decStart/100 * target <= average
 
         if(average >= target):
@@ -205,7 +244,6 @@ def straight(target, dASpeed, dDSpeed, speed, decStart, stopSpeed, accelBool, de
 
 def turn(targetGDeg, speed): 
     mHub.resetGyro()
-    fGa = mHub.getGyroAngle()
     b = 1
     if(targetGDeg > 0 or targetGDeg < 0 or targetGDeg == 0):
         if(targetGDeg > 0):
@@ -218,17 +256,24 @@ def turn(targetGDeg, speed):
             raise Exception("turn.targetGDeg == failed")
         while b == 1:
             cGa = mHub.getGyroAngle()
-            if(targetGDeg > 0):
-                current = cGa - fGa
-
-                if(current >= targetGDeg - 4):
+            if(targetGDeg > 0 and speed > 0):
+                current = cGa
+                if(current >= targetGDeg):
                     bDm.stop()
                     b = 0
-            elif(targetGDeg < 0):
-                current = -(abs(cGa) - abs(fGa))
-        
-        
-                if(current <= targetGDeg + 3):
+            elif(targetGDeg < 0 and speed > 0):
+                current = -(abs(cGa))
+                if(current <= targetGDeg):
+                    bDm.stop()
+                    b = 0
+            elif(targetGDeg > 0 and speed < 0):
+                current = -(cGa)
+                if(current >= targetGDeg):
+                    bDm.stop()
+                    b = 0
+            elif(targetGDeg < 0 and speed < 0):
+                current = -(cGa)
+                if(current <= targetGDeg):
                     bDm.stop()
                     b = 0
             else:
@@ -276,7 +321,7 @@ def lags(tLi, power, tarDeg, port, dASpeed, dDSpeed, decStart, stopSpeed, accelB
             cCgA = (fGa - (cCsV + cGa))*2
 
             if(accelBool == True and isAccelTime == True):
-                powerIntegral = acceleration(counter, power, dASpeed, powerIntegral)
+                powerIntegral = acceleration(counter, power, dASpeed, powerIntegral, True)
             elif(accelBool == False and isAccelTime == True):
                 powerIntegral = power
             elif(isAccelTime == False):
@@ -289,7 +334,7 @@ def lags(tLi, power, tarDeg, port, dASpeed, dDSpeed, decStart, stopSpeed, accelB
                     isAccelTime = False
                     m = 0
                 dCounter+=1
-                powerIntegral = deceleration(dCounter, dDSpeed, stopSpeed, powerIntegral)
+                powerIntegral = deceleration(dCounter, dDSpeed, stopSpeed, powerIntegral, True)
             elif(decBool == False and isDecTime == True):
                 powerIntegral = power
             elif(isDecTime == False):
@@ -413,18 +458,40 @@ def lineSquaring(blackInt, whiteInt, startSpeed):
 
 #Program section:
 def first():
+    #Arriving block
+    straight(1500, 25, 25, 50, 70, 10, True, True)
+    turn(45, 25)
+    straight(180, 25, 50, 50, 70, 10, False, False)
+    #Pusher block
+    straight(90, 50, 25, -50, 70, -10, False, False)
+    straight(90, 25, 50, 50, 70, 10, False, False)
+    #Back to base block
+    straight(180, 25, 50, -50, 70, -10, False, False)
+    turn(45, -25)
+    straight(1000, 25, 25, -50, 70, -10, True, True)
+    turn(-90, -25)
+    straight(500, 50, 50, -50, 70, -10, False, False)
+    #End of block
     global screen
     screen = 0
 def second():
+    turn(90, 50)
+    print(mHub.getGyroAngle())
     global screen
     screen = 1
 def third():
+    print(mHub.getGyroAngle())
+    turn(-90, 50)
     global screen
     screen = 2
 def fourth():
+    print(mHub.getGyroAngle())
+    turn(90, -50)
     global screen
     screen = 3
 def fifth():
+    print(mHub.getGyroAngle())
+    turn(-90, -50)
     global screen
     screen = 4
 def sixth():

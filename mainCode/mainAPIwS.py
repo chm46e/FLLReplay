@@ -134,24 +134,47 @@ timer = Timer()
 
 correction = 0
 
-def acceleration(counter, speed, dASpeed, powerIntegral):
-    power = speed
-    if(powerIntegral >= power):
-        return powerIntegral
-    elif(powerIntegral < power and counter % dASpeed == 0):
-        powerIntegral+=1
-        return powerIntegral
+def acceleration(counter, speed, dASpeed, powerIntegral, forwardBool):
+    if(forwardBool == True):
+        power = speed
+        if(powerIntegral >= power):
+            return powerIntegral
+        elif(powerIntegral < power and counter % dASpeed == 0):
+            powerIntegral+=1
+            return powerIntegral
+        else:
+            return powerIntegral
+    elif(forwardBool == False):
+        power = speed
+        if(powerIntegral <= power):
+            return powerIntegral
+        elif(powerIntegral > power and counter % dASpeed == 0):
+            powerIntegral-=1
+            return powerIntegral
+        else:
+            return powerIntegral
     else:
-        return powerIntegral
+        raise ValueError("acceleration.forwardBool != bool")
 
-def deceleration(dCounter, dDSpeed, stopSpeed, powerIntegral):
-    if(powerIntegral <= stopSpeed):
-        return stopSpeed
-    elif(powerIntegral > stopSpeed and dCounter % dDSpeed == 0):
-        powerIntegral-=1
-        return powerIntegral
+def deceleration(dCounter, dDSpeed, stopSpeed, powerIntegral, forwardBool):
+    if(forwardBool == True):
+        if(powerIntegral <= stopSpeed):
+            return stopSpeed
+        elif(powerIntegral > stopSpeed and dCounter % dDSpeed == 0):
+            powerIntegral-=1
+            return powerIntegral
+        else:
+            return powerIntegral
+    elif(forwardBool == False):
+        if(powerIntegral >= stopSpeed):
+            return stopSpeed
+        elif(powerIntegral < stopSpeed and dCounter % dDSpeed == 0):
+            powerIntegral+=1
+            return powerIntegral
+        else:
+            return powerIntegral
     else:
-        return powerIntegral
+        raise ValueError("deceleration.forwardBool != bool")
 
 def straight(target, dASpeed, dDSpeed, speed, decStart, stopSpeed, accelBool, decBool):
     lDm.resetEncoder()
@@ -160,6 +183,7 @@ def straight(target, dASpeed, dDSpeed, speed, decStart, stopSpeed, accelBool, de
     tGa = mHub.getGyroAngle()
     power = speed
     isAccelTime = True
+    forward = speed > 0
     powerIntegral = 0
     counter = 0
     dCounter = 0
@@ -170,9 +194,19 @@ def straight(target, dASpeed, dDSpeed, speed, decStart, stopSpeed, accelBool, de
     while a == 1:
         counter+=1
         cGa = mHub.getGyroAngle()
-        steering = (tGa - cGa)*2 + correction
+        if(forward == True):
+            steering = (tGa - cGa)*2 + correction
+        elif(forward == False):
+            steering = (cGa - tGa) * 2 + correction
+        else:
+            raise Exception("straight.forward != bool")
         if(accelBool == True and isAccelTime == True):
-            powerIntegral = acceleration(counter, power, dASpeed, powerIntegral)
+            if(forward == True):
+                powerIntegral = acceleration(counter, power, dASpeed, powerIntegral, True)
+            elif(forward == False):
+                powerIntegral = acceleration(counter, power, dASpeed, powerIntegral, False)
+            else:
+                raise Exception("straight.forward != bool")
         elif(accelBool == False and isAccelTime == True):
             powerIntegral = power
         elif(isAccelTime == False):
@@ -185,7 +219,12 @@ def straight(target, dASpeed, dDSpeed, speed, decStart, stopSpeed, accelBool, de
                 isAccelTime = False
                 m = 0
             dCounter+=1
-            powerIntegral = deceleration(dCounter, dDSpeed, stopSpeed, powerIntegral)
+            if(forward == True):
+                powerIntegral = deceleration(dCounter, dDSpeed, stopSpeed, powerIntegral, True)
+            elif(forward == False):
+                powerIntegral = deceleration(dCounter, dDSpeed, stopSpeed, powerIntegral, False)
+            else:
+                raise Exception("straight.forward != bool")
         elif(decBool == False and isDecTime == True):
             powerIntegral = power
         elif(isDecTime == False):
@@ -196,7 +235,7 @@ def straight(target, dASpeed, dDSpeed, speed, decStart, stopSpeed, accelBool, de
         bDm.start(steering, powerIntegral)
         cRdMv = rDm.getEncoder()
         cLdMv = lDm.getEncoder()
-        average = round((cRdMv + -(cLdMv))/2)
+        average = round(abs((cRdMv + -(cLdMv))/2))
         isDecTime = decStart/100 * target <= average
 
         if(average >= target):
