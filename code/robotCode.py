@@ -458,25 +458,29 @@ def lineSquaring(blackInt, whiteInt, startSpeed):
 
 #Program section:
 def first():
+    straight(10, 25, 25, -30, 70, 10, False, False)
     #Arriving block
-    straight(1500, 25, 25, 50, 70, 10, True, True)
-    turn(45, 25)
-    straight(180, 25, 50, 50, 70, 10, False, False)
+    straight(750, 25, 25, 100, 70, 10, True, True)
+    turn(15, 50)
+    straight(300, 25, 50, 100, 70, 10, False, False)
     #Pusher block
-    straight(90, 50, 25, -50, 70, -10, False, False)
-    straight(90, 25, 50, 50, 70, 10, False, False)
+    '''utime.sleep_ms(250)
+    straight(45, 50, 25, -100, 70, -10, False, False)
+    utime.sleep_ms(250)
+    straight(45, 25, 50, 100, 70, 10, False, False)
+    utime.sleep_ms(250)'''
     #Back to base block
-    straight(180, 25, 50, -50, 70, -10, False, False)
-    turn(45, -25)
-    straight(1000, 25, 25, -50, 70, -10, True, True)
-    turn(-90, -25)
-    straight(500, 50, 50, -50, 70, -10, False, False)
+    straight(300, 25, 50, -100, 70, -10, False, False)
+    turn(15, -50)
+    straight(250, 25, 25, -100, 70, -10, True, True)
+    turn(-90, -50)
+    straight(400, 50, 50, -50, 70, -10, False, False)
     #End of block
     global screen
     screen = 0
 def second():
-    turn(90, 50)
-    print(mHub.getGyroAngle())
+    straight(200, 50, 50, 50, 70, 10, False, False)
+    turn(45, 50)
     global screen
     screen = 1
 def third():
@@ -580,3 +584,4 @@ while loop:
             mHub.display(str(screen))
         else:
             raise ValueError("loop.screen == failed")
+#lineSquaring(50, 90, 20)
