@@ -479,8 +479,10 @@ def first():
     global screen
     screen = 0
 def second():
-    straight(200, 50, 50, 50, 70, 10, False, False)
-    turn(45, 50)
+    straight(10, 25, 25, -30, 70, 10, False, False)
+    straight(40, 50, 50, 50, 70, 10, False, False)
+    turn(60, 50)
+    straight(500, 25, 25, 50, 50, 10, True, True)
     global screen
     screen = 1
 def third():
